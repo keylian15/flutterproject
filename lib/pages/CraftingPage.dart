@@ -7,9 +7,16 @@ class Craftingpage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Crafting")),
-      body: Center(
-        child: Text("Craft", style: TextStyle(fontSize: 24)),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              "assets/images/background.png",
+              fit: BoxFit.cover,
+            ),
+          ),
+
+        ],
       ),
       bottomNavigationBar: NavBar(currentIndex: 1),
     );

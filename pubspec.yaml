@@ -70,6 +70,7 @@ flutter:
   assets:
     - assets/images/navBar.png
     - assets/images/placeholder.png
+    - assets/images/background.png
 
 
   #   - images/a_dot_burr.jpeg

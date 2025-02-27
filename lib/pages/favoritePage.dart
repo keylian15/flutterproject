@@ -7,17 +7,23 @@ class FavoritePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Favories")),
-      body: Column(
+      body: Stack(
         children: [
-          Expanded(
-            child: Center(
-              child: Text("Favories", style: TextStyle(fontSize: 24)),
+          Positioned.fill(
+            child: Image.asset(
+              "assets/images/background.png",
+              fit: BoxFit.cover,
             ),
           ),
-          NavBar(currentIndex: 2),
+          Center(
+            child: Text(
+              "Favories",
+              style: TextStyle(fontSize: 24, color: Colors.white),
+            ),
+          ),
         ],
       ),
+      bottomNavigationBar: NavBar(currentIndex: 2),
     );
   }
 }
