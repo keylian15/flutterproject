@@ -13,8 +13,8 @@ class ApiHelper {
 
   final Dio dio;
 
-  void get() {
-    final url = 'https://docto.bet/api';
-    final response = dio.get(url);
+  Future<Response> get() {
+    final url = 'https://github.com/anish-shanbhag/minecraft-api/';
+    return dio.get(url);
   }
 }

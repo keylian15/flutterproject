@@ -1,6 +1,5 @@
-import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:flutterproject/helper/api_helper.dart';
+import 'package:flutterproject/widget/block.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -28,61 +27,33 @@ class AppStore extends StateNotifier<AppStoreState> {
       // prefs.setDouble(AppConst.weightKey, state.weightKg);
     });
   }
+
+  void getAllItem(){
+    api.get().then((response){
+      var blocks = response.data as List<dynamic>;
+
+      final res = [];
+      blocks.forEach((block){
+        res.add(block(block["name"], block["nameSpaceId"], block["image"]));
+      });
+
+      state = state.copyWith(blocks : res);
+    });
+  }
 }
 
 class AppStoreState {
   //variables
+  final List<Block> blocks;
 
   //constructeur
-  AppStoreState();
+  AppStoreState({required this.blocks});
 
   factory AppStoreState.init() {
-    return AppStoreState();
+    return AppStoreState(blocks: []);
   }
 
-  AppStoreState copyWith({double? weightKg, double? heightCm}) {
-    return AppStoreState(
-        // weightKg: weightKg ?? this.weightKg,
-        );
-  }
-}
-
-class MinecraftStore with ChangeNotifier {
-  List<dynamic> items = [];
-  bool isLoading = false;
-  String? errorMessage;
-
-  Future<void> fetchMinecraftData() async {
-    final url = Uri.parse(
-        "https://raw.githubusercontent.com/PrismarineJS/minecraft-data/master/data/pc/1.18/items.json");
-
-    try {
-      isLoading = true;
-      errorMessage = null;
-      notifyListeners();
-
-      print("🔄 Envoi de la requête à l'API...");
-      final response = await http.get(url);
-
-      print("📥 Réponse reçue. Code HTTP: ${response.statusCode}");
-      if (response.statusCode == 200) {
-        print("✅ JSON chargé avec succès.");
-        List<dynamic> data = jsonDecode(response.body);
-
-        if (data.isEmpty) {
-          throw Exception("Le JSON est vide !");
-        }
-
-        items = data;
-      } else {
-        throw Exception("Erreur HTTP ${response.statusCode}");
-      }
-    } catch (e) {
-      errorMessage = "Erreur : ${e.toString()}";
-      print("❌ Erreur lors du chargement des données : $e");
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
+  AppStoreState copyWith({blocks}) {
+    return AppStoreState(blocks: blocks ?? this.blocks);
   }
 }
