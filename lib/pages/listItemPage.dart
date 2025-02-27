@@ -46,6 +46,10 @@ class _ListeItemPageState extends State<ListeItemPage> {
             itemCount: store.items.length,
             itemBuilder: (context, index) {
               var item = store.items[index];
+
+              // Créer l'URL dynamique de l'image
+              String imageUrl = "https://minecraft-api.vercel.app/images/blocks/${item["name"] ?? "unknown"}.png";
+
               return ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.all(10),
@@ -65,9 +69,17 @@ class _ListeItemPageState extends State<ListeItemPage> {
                   children: [
                     Expanded(
                       child: Image.network(
-                        "https://minecraft-api.vercel.app/images/blocks/${item["namespacedId"] ?? "unknown"}.png",
+                        imageUrl,
                         fit: BoxFit.contain,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) {
+                            return child; // Image chargée
+                          } else {
+                            return Center(child: CircularProgressIndicator());
+                          }
+                        },
                         errorBuilder: (context, error, stackTrace) {
+                          // Afficher l'image par défaut si l'URL échoue
                           return Image.asset("assets/images/placeholder.png", fit: BoxFit.contain);
                         },
                       ),
