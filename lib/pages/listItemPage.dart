@@ -1,11 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutterproject/Store/app_store.dart';
+import 'package:flutterproject/widget/block.dart';
 import '../widget/navBar_widget.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ListeItemPage extends StatelessWidget {
+class ListeItemPage extends ConsumerWidget {
   const ListeItemPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(appStoreProvider);
+
+    final widgets = <Widget>[];
+    state.blocks.forEach((block){
+      widgets.add(Block());
+    });
+
+    print(widgets);
+
     return Scaffold(
       body: Stack(
         children: [
@@ -16,7 +28,9 @@ class ListeItemPage extends StatelessWidget {
             ),
           ),
           Center(
-
+            child: ListView(
+              children: widgets,
+            ),
           ),
         ],
       ),

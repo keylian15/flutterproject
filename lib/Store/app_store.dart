@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutterproject/helper/api_helper.dart';
-import 'package:flutterproject/widget/block.dart';
+import 'package:flutterproject/block_data.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../widget/block.dart';
 
 final appStoreProvider = StateNotifierProvider<AppStore, AppStoreState>((ref) {
   var apiHelper = ref.watch(apiHelperProvider);
@@ -10,11 +14,7 @@ final appStoreProvider = StateNotifierProvider<AppStore, AppStoreState>((ref) {
 
 class AppStore extends StateNotifier<AppStoreState> {
   AppStore({required this.api}) : super(AppStoreState.init()) {
-    SharedPreferences.getInstance().then((prefs) {
-      state = state.copyWith(
-          // weightKg: prefs.getDouble(AppConst.weightKey), // -> Favoris ?
-          );
-    });
+    getAllItem();
   }
 
   final ApiHelper api;
@@ -30,11 +30,14 @@ class AppStore extends StateNotifier<AppStoreState> {
 
   void getAllItem(){
     api.get().then((response){
-      var blocks = response.data as List<dynamic>;
+      List<dynamic> blocks = json.decode(response.data);
 
-      final res = [];
+      final res = <BlockData>[];
       blocks.forEach((block){
-        res.add(block(block["name"], block["nameSpaceId"], block["image"]));
+        res.add(BlockData(
+            name: block["name"],
+            nameSpaceId: block["namespaceId"],
+            image: block["image"]));
       });
 
       state = state.copyWith(blocks : res);
@@ -44,7 +47,7 @@ class AppStore extends StateNotifier<AppStoreState> {
 
 class AppStoreState {
   //variables
-  final List<Block> blocks;
+  final List<BlockData> blocks;
 
   //constructeur
   AppStoreState({required this.blocks});
@@ -53,7 +56,7 @@ class AppStoreState {
     return AppStoreState(blocks: []);
   }
 
-  AppStoreState copyWith({blocks}) {
+  AppStoreState copyWith({List<BlockData>? blocks}) {
     return AppStoreState(blocks: blocks ?? this.blocks);
   }
 }

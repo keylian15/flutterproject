@@ -14,7 +14,7 @@ class ApiHelper {
   final Dio dio;
 
   Future<Response> get() {
-    final url = 'https://github.com/anish-shanbhag/minecraft-api/';
+    final url = 'https://raw.githubusercontent.com/anish-shanbhag/minecraft-api/refs/heads/master/data/blocks.json';
     return dio.get(url);
   }
 }

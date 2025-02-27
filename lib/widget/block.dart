@@ -1,7 +1,10 @@
-class Block {
-  final String name;
-  final String nameSpaceId;
-  final String image;
+import 'package:flutter/material.dart';
 
-  Block({required this.name, required this.nameSpaceId, required this.image});
+class Block extends StatelessWidget {
+  const Block({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Placeholder();
+  }
 }
