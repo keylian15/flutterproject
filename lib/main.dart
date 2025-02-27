@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
-import 'pages/favoritePage.dart';
+import 'package:provider/provider.dart';
+import './Store/PaperMcAPI.dart';
+import 'pages/listItemPage.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => MinecraftStore(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -11,11 +18,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const FavoritePage(),
+      debugShowCheckedModeBanner: false,
+      title: 'Minecraft Items',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: const ListeItemPage(),
     );
   }
 }

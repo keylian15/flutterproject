@@ -39,7 +39,6 @@ class NavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 80,
       child: Stack(
         alignment: Alignment.bottomCenter,
         children: [
