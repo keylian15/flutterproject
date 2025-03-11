@@ -14,68 +14,76 @@ final appStoreProvider = StateNotifierProvider<AppStore, AppStoreState>((ref) {
 
 class AppStore extends StateNotifier<AppStoreState> {
   AppStore({required this.api}) : super(AppStoreState.init()) {
-    getAllItem();
+    initStore();
   }
 
   final ApiHelper api;
 
-  // TODO : Fonctions utiles
-  void resetValues(AppStore store, AppStoreState state) {}
-
-  void saveValue() {
-    SharedPreferences.getInstance().then((SharedPreferences prefs) {
-      // prefs.setDouble(AppConst.weightKey, state.weightKg);
-    });
+  Future<void> initStore() async {
+    await getBlocs();
+    await loadFavorits();
   }
 
-  void getAllItem() {
-    // Récupération des blocs + Création de ces derniers.
-    api.get().then((response) {
-      List<dynamic> blocks = json.decode(response.data);
+  Future<void> addFavorits(String nameSpacedId) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String> favoris = prefs.getStringList("favoris") ?? [];
 
-      final res = <BlockData>[];
-      blocks.forEach((block) {
-        res.add(BlockData(
-            name: block["name"],
-            nameSpaceId: block["namespaceId"],
-            image: block["image"]));
-      });
-
-      state = state.copyWith(blocks: res);
-    });
+    if (!favoris.contains(nameSpacedId)) {
+      favoris.add(nameSpacedId);
+      await prefs.setStringList("favoris", favoris);
+      state = state.copyWith(nameIdsFavorits: favoris);
+    }
   }
 
-  void getItem(String name) {
-    // Récupération des blocs + Création de ces derniers.
-    api.get().then((response) {
-      List<dynamic> blocks = json.decode(response.data);
+  Future<void> loadFavorits() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String> favoris = prefs.getStringList("favoris") ?? [];
+    print("Changement avec les favoris ajout de ${favoris}");
+    state = state.copyWith(nameIdsFavorits: favoris);
+    print(state.nameIdsFavorits);
+  }
 
-      final res = <BlockData>[];
-      blocks.forEach((block) {
-        if (name == block["name"]) {
-          res.add(BlockData(
-              name: block["name"],
-              nameSpaceId: block["namespaceId"],
-              image: block["image"]));
-        }
-        ;
-      });
+  Future<void> getBlocs() async {
+    final response = await api.get();
+    List<dynamic> blocks = json.decode(response.data);
+
+    final res = <BlockData>[];
+    blocks.forEach((block) {
+      res.add(BlockData(
+        name: block["name"],
+        nameSpacedId: block["namespacedId"],
+        image: block["image"],
+      ));
     });
+
+    state = state.copyWith(blocks: res);
+  }
+
+  BlockData getBloc(String nameSpacedId) {
+    return state.blocks.firstWhere(
+          (bloc) => bloc.nameSpacedId == nameSpacedId,
+      orElse: () =>
+          BlockData(name: "Inconnu", nameSpacedId: nameSpacedId, image: ""),
+    );
   }
 }
 
 class AppStoreState {
   //variables
   final List<BlockData> blocks;
+  final List<String> nameIdsFavorits;
 
   //constructeur
-  AppStoreState({required this.blocks});
+  AppStoreState({required this.blocks, required this.nameIdsFavorits});
 
   factory AppStoreState.init() {
-    return AppStoreState(blocks: []);
+    return AppStoreState(blocks: [], nameIdsFavorits: []);
   }
 
-  AppStoreState copyWith({List<BlockData>? blocks}) {
-    return AppStoreState(blocks: blocks ?? this.blocks);
+  AppStoreState copyWith(
+      {List<BlockData>? blocks, List<String>? nameIdsFavorits}) {
+    return AppStoreState(
+        blocks: blocks ?? this.blocks,
+        nameIdsFavorits: nameIdsFavorits ?? this.nameIdsFavorits);
   }
 }

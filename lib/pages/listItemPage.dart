@@ -15,19 +15,17 @@ class ListeItemPage extends ConsumerWidget {
     final widgets = <Widget>[];
     state.blocks.forEach((block) {
       widgets.add(BlockWidget(
-        block: block,
-        showName: true,
+        nameSpacedId: block.nameSpacedId,
+        showText: true,
+        /** A mettre en variable avec la recherche + automatisation lors de la selection du nb par ligne
+            Param : true pour afficher - Rien pour ne pas afficher
+         */
       ));
     });
 
     // Gestion du chargement ou de l'erreur
     if (state.blocks.isEmpty) {
       return const Center(child: CircularProgressIndicator());
-    }
-
-    // Si aucun bloc n'est disponible
-    if (state.blocks.isEmpty) {
-      return const Center(child: Text("Aucun élément trouvé."));
     }
 
     return Scaffold(
@@ -44,7 +42,7 @@ class ListeItemPage extends ConsumerWidget {
               child: GridView(
                 // Parametre grille
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
+                  crossAxisCount: 2,
                   crossAxisSpacing: 10,
                   mainAxisSpacing: 10,
                   childAspectRatio: 1, // Forme Carré

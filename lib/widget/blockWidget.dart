@@ -1,19 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import 'package:flutterproject/helper/api_helper.dart';
+import 'package:flutterproject/block_data.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../Store/app_store.dart';
 import '../block_data.dart';
 
-class BlockWidget extends StatelessWidget {
-  final String name;
-  final String imageUrl;
+class BlockWidget extends ConsumerWidget {
+  final String nameSpacedId;
+
+  // final String name;
+  // final String imageUrl;
   final bool showText;
 
-  BlockWidget({super.key, required BlockData block, required showName})
-      : name = block.name ?? "Nom inconnu",
-        imageUrl = block.image ?? "",
-        showText = showName;
+  BlockWidget({super.key, required String nameSpacedId, bool? showText})
+      : nameSpacedId = nameSpacedId,
+        showText = showText ?? false;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final AppStore store = ref.watch(appStoreProvider.notifier);
+
+    BlockData blockData = store.getBloc(nameSpacedId);
+    String? name = blockData.name;
+    String? imageUrl = blockData.image;
+
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.all(10),
@@ -24,16 +37,17 @@ class BlockWidget extends StatelessWidget {
       ),
       onPressed: () {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("Tu as sélectionné : ${name}"),
+          content: Text("Tu as mis en favoris : ${name}"),
           duration: Duration(seconds: 2),
         ));
-      },
+        store.addFavorits(nameSpacedId);// Fonction a changer pour la mettre avec celle du craft
+        },
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Expanded(
             child: Image.network(
-              imageUrl,
+              imageUrl!,
               fit: BoxFit.contain,
               loadingBuilder: (context, child, loadingProgress) {
                 if (loadingProgress == null) {
@@ -43,25 +57,27 @@ class BlockWidget extends StatelessWidget {
                     child: CircularProgressIndicator(
                       value: loadingProgress.expectedTotalBytes != null
                           ? loadingProgress.cumulativeBytesLoaded /
-                          (loadingProgress.expectedTotalBytes ?? 1)
+                              (loadingProgress.expectedTotalBytes ?? 1)
                           : null,
                     ),
                   );
                 }
               },
               errorBuilder: (context, error, stackTrace) {
-
                 return Image.asset("assets/images/placeholder.png",
                     fit: BoxFit.contain);
               },
             ),
           ),
           const SizedBox(height: 8),
-          (showText) ? Text(
-            name ?? "Nom inconnu",
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-          ) : SizedBox(),
+          (showText)
+              ? Text(
+                  name ?? "Nom inconnu",
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.bold),
+                )
+              : SizedBox(),
         ],
       ),
     );
