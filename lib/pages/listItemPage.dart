@@ -16,6 +16,7 @@ class ListeItemPage extends ConsumerWidget {
     state.blocks.forEach((block) {
       widgets.add(BlockWidget(
         block: block,
+        showName: true,
       ));
     });
 
@@ -40,19 +41,15 @@ class ListeItemPage extends ConsumerWidget {
           ),
           Padding(
               padding: const EdgeInsets.all(10),
-              child: GridView.builder(
+              child: GridView(
                 // Parametre grille
-                padding: const EdgeInsets.all(10),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
+                  crossAxisCount: 3,
                   crossAxisSpacing: 10,
                   mainAxisSpacing: 10,
                   childAspectRatio: 1, // Forme Carré
                 ),
-                itemCount: state.blocks.length,
-                itemBuilder: (context, index) {
-                  return BlockWidget(block: state.blocks[index]);
-                },
+                children: widgets,
               ))
         ],
       ),

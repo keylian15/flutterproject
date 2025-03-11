@@ -5,10 +5,12 @@ import '../block_data.dart';
 class BlockWidget extends StatelessWidget {
   final String name;
   final String imageUrl;
+  final bool showText;
 
-  BlockWidget({super.key, required BlockData block})
+  BlockWidget({super.key, required BlockData block, required showName})
       : name = block.name ?? "Nom inconnu",
-        imageUrl = block.image ?? "";
+        imageUrl = block.image ?? "",
+        showText = showName;
 
   @override
   Widget build(BuildContext context) {
@@ -55,11 +57,11 @@ class BlockWidget extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
+          (showText) ? Text(
             name ?? "Nom inconnu",
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-          ),
+          ) : SizedBox(),
         ],
       ),
     );

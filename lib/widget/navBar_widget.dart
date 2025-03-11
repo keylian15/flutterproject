@@ -64,7 +64,7 @@ class NavBar extends StatelessWidget {
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.favorite),
-                label: 'Favories',
+                label: 'Favoris',
               ),
             ],
             selectedItemColor: Colors.blue,
