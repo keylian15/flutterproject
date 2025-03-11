@@ -28,20 +28,38 @@ class AppStore extends StateNotifier<AppStoreState> {
     });
   }
 
-  void getAllItem(){
+  void getAllItem() {
     // Récupération des blocs + Création de ces derniers.
-    api.get().then((response){
+    api.get().then((response) {
       List<dynamic> blocks = json.decode(response.data);
 
       final res = <BlockData>[];
-      blocks.forEach((block){
+      blocks.forEach((block) {
         res.add(BlockData(
             name: block["name"],
             nameSpaceId: block["namespaceId"],
             image: block["image"]));
       });
 
-      state = state.copyWith(blocks : res);
+      state = state.copyWith(blocks: res);
+    });
+  }
+
+  void getItem(String name) {
+    // Récupération des blocs + Création de ces derniers.
+    api.get().then((response) {
+      List<dynamic> blocks = json.decode(response.data);
+
+      final res = <BlockData>[];
+      blocks.forEach((block) {
+        if (name == block["name"]) {
+          res.add(BlockData(
+              name: block["name"],
+              nameSpaceId: block["namespaceId"],
+              image: block["image"]));
+        }
+        ;
+      });
     });
   }
 }
