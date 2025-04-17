@@ -1,23 +1,41 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
-import 'package:flutterproject/helper/api_helper.dart';
 import 'package:flutterproject/block_data.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../Store/app_store.dart';
-import '../block_data.dart';
 
 class BlockWidget extends ConsumerWidget {
   final String nameSpacedId;
 
-  // final String name;
-  // final String imageUrl;
   final bool showText;
 
   BlockWidget({super.key, required String nameSpacedId, bool? showText})
       : nameSpacedId = nameSpacedId,
         showText = showText ?? false;
+
+  Future<ScaffoldFeatureController<SnackBar, SnackBarClosedReason>>
+      manageFavorite(
+          BuildContext context, AppStore store, String nameSpacedId) async {
+    BlockData blockData = store.getBloc(nameSpacedId);
+    String? name = blockData.name;
+
+    if (await store.isFavorite(nameSpacedId)) {
+      store.removeFavorite(
+          nameSpacedId); // Fonction a changer pour la mettre avec celle du craft
+
+      return ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("Tu as enlevé des favoris : ${name}"),
+        duration: Duration(seconds: 1),
+      ));
+    } else {
+      store.addFavorite(
+          nameSpacedId); // Fonction a changer pour la mettre avec celle du craft
+
+      return ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("Tu as mis en favoris : ${name}"),
+        duration: Duration(seconds: 1),
+      ));
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -35,13 +53,9 @@ class BlockWidget extends ConsumerWidget {
         shadowColor: Colors.grey.withValues(alpha: 0, red: 0, blue: 0),
         elevation: 5,
       ),
-      onPressed: () {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("Tu as mis en favoris : ${name}"),
-          duration: Duration(seconds: 2),
-        ));
-        store.addFavorits(nameSpacedId);// Fonction a changer pour la mettre avec celle du craft
-        },
+      onPressed: () async {
+        manageFavorite(context, store, nameSpacedId);
+      },
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

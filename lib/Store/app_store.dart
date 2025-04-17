@@ -5,7 +5,6 @@ import 'package:flutterproject/block_data.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../widget/blockWidget.dart';
 
 final appStoreProvider = StateNotifierProvider<AppStore, AppStoreState>((ref) {
   var apiHelper = ref.watch(apiHelperProvider);
@@ -21,10 +20,10 @@ class AppStore extends StateNotifier<AppStoreState> {
 
   Future<void> initStore() async {
     await getBlocs();
-    await loadFavorits();
+    await loadFavorites();
   }
 
-  Future<void> addFavorits(String nameSpacedId) async {
+  Future<void> addFavorite(String nameSpacedId) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     List<String> favoris = prefs.getStringList("favoris") ?? [];
 
@@ -35,12 +34,27 @@ class AppStore extends StateNotifier<AppStoreState> {
     }
   }
 
-  Future<void> loadFavorits() async {
+  Future<void> removeFavorite(String nameSpacedId) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     List<String> favoris = prefs.getStringList("favoris") ?? [];
-    print("Changement avec les favoris ajout de ${favoris}");
+
+    if (favoris.contains(nameSpacedId)) {
+      favoris.remove(nameSpacedId);
+      await prefs.setStringList("favoris", favoris);
+      state = state.copyWith(nameIdsFavorits: favoris);
+    }
+  }
+
+  Future<bool> isFavorite(String nameSpacedId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final favoris = prefs.getStringList('favoris') ?? [];
+    return favoris.contains(nameSpacedId);
+  }
+
+  Future<void> loadFavorites() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String> favoris = prefs.getStringList("favoris") ?? [];
     state = state.copyWith(nameIdsFavorits: favoris);
-    print(state.nameIdsFavorits);
   }
 
   Future<void> getBlocs() async {
@@ -61,7 +75,7 @@ class AppStore extends StateNotifier<AppStoreState> {
 
   BlockData getBloc(String nameSpacedId) {
     return state.blocks.firstWhere(
-          (bloc) => bloc.nameSpacedId == nameSpacedId,
+      (bloc) => bloc.nameSpacedId == nameSpacedId,
       orElse: () =>
           BlockData(name: "Inconnu", nameSpacedId: nameSpacedId, image: ""),
     );
