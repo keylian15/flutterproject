@@ -1,56 +1,45 @@
-class Craftingpage extends ConsumerStatefulWidget {
+import 'package:flutter/material.dart';
+import '../widget/navBar_widget.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutterproject/Store/app_store.dart';
+import 'package:flutterproject/widget/blockWidget.dart';
+
+class Craftingpage extends ConsumerWidget {
   const Craftingpage({super.key});
 
   @override
-  ConsumerState<Craftingpage> createState() => _CraftingpageState();
-}
-
-class _CraftingpageState extends ConsumerState<Craftingpage> {
-  List<CraftSlot> slots = List.generate(9, (_) => CraftSlot());
-
-  void handleItemDrop(int index, BlockData block) {
-    setState(() {
-      slots[index] = CraftSlot(block: block);
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(appStoreProvider);
 
     final widgets = <Widget>[];
-    for (final block in state.blocks) {
-      widgets.add(
-        Draggable<BlockData>(
-          data: block,
-          feedback: Material(
-            color: Colors.transparent,
-            child: Image.network(block.image, height: 40),
-          ),
-          childWhenDragging: Opacity(
-            opacity: 0.4,
-            child: BlockWidget(nameSpacedId: block.nameSpacedId, showText: true),
-          ),
-          child: BlockWidget(nameSpacedId: block.nameSpacedId, showText: true),
-        ),
-      );
-    }
-
-    return Scaffold(
+    state.blocks.forEach((block) {
+      widgets.add(BlockWidget(
+        nameSpacedId: block.nameSpacedId,
+        showText: true,
+      ));
+    });
+  
+  return Scaffold(
       body: Stack(
         children: [
+          // Background
           Positioned.fill(
             child: Image.asset(
               "assets/images/background.png",
               fit: BoxFit.cover,
             ),
           ),
+          // Contenu
           Padding(
             padding: const EdgeInsets.all(10),
             child: Column(
               children: [
-                const SizedBox(height: 30),
-                buildCraftingGrid(slots, handleItemDrop), // 👈 Table interactive
+                const SizedBox(height: 90), 
+                Image.asset(
+                  "assets/images/craftingtable.png",
+                  height: 200,
+                  fit: BoxFit.contain,
+                ),
                 const SizedBox(height: 10),
                 Expanded(
                   child: state.blocks.isEmpty
