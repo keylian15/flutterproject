@@ -14,8 +14,8 @@ class FavoritePage extends ConsumerWidget {
     final state = ref.watch(appStoreProvider);
 
     final widgets = <Widget>[];
-    final favorits = state.nameIdsFavorits;
-    for (var nameSpacedId in favorits) {
+    final List<String> nonNullFavorits = state.nameIdsFavorits ?? [];
+    for (var nameSpacedId in nonNullFavorits) {
       widgets.add(BlockWidget(
         nameSpacedId: nameSpacedId,
         showText: true,

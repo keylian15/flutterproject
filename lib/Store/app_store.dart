@@ -4,41 +4,72 @@ import 'package:flutterproject/helper/api_helper.dart';
 import 'package:flutterproject/block_data.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutterproject/models/recipe_model.dart';
 
-
-final appStoreProvider = StateNotifierProvider<AppStore, AppStoreState>((ref) {
+final appStoreProvider = StateNotifierProvider<AppStore, AppState>((ref) {
   var apiHelper = ref.watch(apiHelperProvider);
-  return AppStore(api: apiHelper);
+  return AppStore(apiHelper: apiHelper);
 });
 
-class AppStore extends StateNotifier<AppStoreState> {
-  AppStore({required this.api}) : super(AppStoreState.init()) {
-    initStore();
+class AppStore extends StateNotifier<AppState> {
+  final ApiHelper _apiHelper;
+
+  AppStore({required ApiHelper apiHelper})
+      : _apiHelper = apiHelper,
+        super(AppState()) {
+    fetchBlocks();
+    fetchCraftingData();
   }
 
-  final ApiHelper api;
-  List<BlockData> _allBlocks = []; // Pour stocker tous les blocs non filtrés
+  List<BlockData> _allBlocks = [];
   String _currentSearchQuery = '';
 
-  Future<void> initStore() async {
-    await getBlocs();
-    await loadFavorites();
+  Future<void> fetchBlocks() async {
+    try {
+      final response = await _apiHelper.get();
+      List<dynamic> blocks = json.decode(response.data);
+
+      final res = <BlockData>[];
+      blocks.forEach((block) {
+        res.add(BlockData(
+          name: block["name"],
+          nameSpacedId: block["namespacedId"],
+          image: block["image"],
+        ));
+      });
+
+      _allBlocks = List.from(res);
+
+      if (_currentSearchQuery.isNotEmpty) {
+        filterBlocks(_currentSearchQuery);
+      } else {
+        state = state.copyWith(blocks: res);
+      }
+    } catch (e) {
+      print("Erreur lors du chargement des blocs: $e");
+    }
   }
 
-  // Méthode de filtrage améliorée
+  Future<void> fetchCraftingData() async {
+    try {
+      final recipes = await _apiHelper.getCrafting();
+      state = state.copyWith(craftingData: recipes);
+      print('Recettes chargées: ${recipes.length}');
+    } catch (e) {
+      print('Erreur lors du chargement des recettes: $e');
+    }
+  }
+
   void filterBlocks(String query) {
     _currentSearchQuery = query;
-    
+
     if (query.isEmpty) {
-      // Si la requête est vide, afficher tous les blocs
       state = state.copyWith(blocks: List.from(_allBlocks));
     } else {
-      // Filtrer les blocs dont le nom contient la requête (insensible à la casse)
-      final filteredBlocks = _allBlocks.where((block) => 
-        (block.name?.toLowerCase().contains(query.toLowerCase()) ?? false) ||
-        (block.nameSpacedId?.toLowerCase().contains(query.toLowerCase()) ?? false)
-      ).toList();
-      
+      final filteredBlocks = _allBlocks.where((block) =>
+          (block.name?.toLowerCase().contains(query.toLowerCase()) ?? false) ||
+          (block.nameSpacedId?.toLowerCase().contains(query.toLowerCase()) ?? false)).toList();
+
       state = state.copyWith(blocks: filteredBlocks);
     }
   }
@@ -77,58 +108,34 @@ class AppStore extends StateNotifier<AppStoreState> {
     state = state.copyWith(nameIdsFavorits: favoris);
   }
 
-  Future<void> getBlocs() async {
-    try {
-      final response = await api.get();
-      List<dynamic> blocks = json.decode(response.data);
-
-      final res = <BlockData>[];
-      blocks.forEach((block) {
-        res.add(BlockData(
-          name: block["name"],
-          nameSpacedId: block["namespacedId"],
-          image: block["image"],
-        ));
-      });
-
-      _allBlocks = List.from(res); // Stocker une copie de tous les blocs
-      
-      // Appliquer le filtre actuel si une recherche est en cours
-      if (_currentSearchQuery.isNotEmpty) {
-        filterBlocks(_currentSearchQuery);
-      } else {
-        state = state.copyWith(blocks: res);
-      }
-    } catch (e) {
-      print("Erreur lors du chargement des blocs: $e");
-    }
-  }
-
   BlockData getBloc(String nameSpacedId) {
-    return state.blocks.firstWhere(
+    return state.blocks?.firstWhere(
       (bloc) => bloc.nameSpacedId == nameSpacedId,
-      orElse: () =>
-          BlockData(name: "Inconnu", nameSpacedId: nameSpacedId, image: ""),
-    );
+      orElse: () => BlockData(name: "Inconnu", nameSpacedId: nameSpacedId, image: ""),
+    ) ?? BlockData(name: "Inconnu", nameSpacedId: nameSpacedId, image: "");
   }
 }
 
-class AppStoreState {
-  //variables
-  final List<BlockData> blocks;
-  final List<String> nameIdsFavorits;
+class AppState {
+  final List<BlockData>? blocks;
+  final List<String>? nameIdsFavorits;
+  final List<Recipe>? craftingData;
 
-  //constructeur
-  AppStoreState({required this.blocks, required this.nameIdsFavorits});
+  AppState({
+    this.blocks,
+    this.nameIdsFavorits,
+    this.craftingData,
+  });
 
-  factory AppStoreState.init() {
-    return AppStoreState(blocks: [], nameIdsFavorits: []);
-  }
-
-  AppStoreState copyWith(
-      {List<BlockData>? blocks, List<String>? nameIdsFavorits}) {
-    return AppStoreState(
-        blocks: blocks ?? this.blocks,
-        nameIdsFavorits: nameIdsFavorits ?? this.nameIdsFavorits);
+  AppState copyWith({
+    List<BlockData>? blocks,
+    List<String>? nameIdsFavorits,
+    List<Recipe>? craftingData,
+  }) {
+    return AppState(
+      blocks: blocks ?? this.blocks,
+      nameIdsFavorits: nameIdsFavorits ?? this.nameIdsFavorits,
+      craftingData: craftingData ?? this.craftingData,
+    );
   }
 }

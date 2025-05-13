@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutterproject/block_data.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../Store/app_store.dart';
+import '../pages/CraftingPage.dart';  // Ajoutez cet import
 
 class BlockWidget extends ConsumerWidget {
   final String nameSpacedId;
@@ -56,43 +57,53 @@ class BlockWidget extends ConsumerWidget {
       onPressed: () async {
         manageFavorite(context, store, nameSpacedId);
       },
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Image.network(
-              imageUrl!,
-              fit: BoxFit.contain,
-              loadingBuilder: (context, child, loadingProgress) {
-                if (loadingProgress == null) {
-                  return child;
-                } else {
-                  return Center(
-                    child: CircularProgressIndicator(
-                      value: loadingProgress.expectedTotalBytes != null
-                          ? loadingProgress.cumulativeBytesLoaded /
-                              (loadingProgress.expectedTotalBytes ?? 1)
-                          : null,
-                    ),
-                  );
-                }
-              },
-              errorBuilder: (context, error, stackTrace) {
-                return Image.asset("assets/images/placeholder.png",
-                    fit: BoxFit.contain);
-              },
+      child: GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => Craftingpage(selectedBlock: name),
             ),
-          ),
-          const SizedBox(height: 8),
-          (showText)
-              ? Text(
-                  name ?? "Nom inconnu",
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.bold),
-                )
-              : SizedBox(),
-        ],
+          );
+        },
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Image.network(
+                imageUrl!,
+                fit: BoxFit.contain,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) {
+                    return child;
+                  } else {
+                    return Center(
+                      child: CircularProgressIndicator(
+                        value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded /
+                                (loadingProgress.expectedTotalBytes ?? 1)
+                            : null,
+                      ),
+                    );
+                  }
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return Image.asset("assets/images/placeholder.png",
+                      fit: BoxFit.contain);
+                },
+              ),
+            ),
+            const SizedBox(height: 8),
+            (showText)
+                ? Text(
+                    name ?? "Nom inconnu",
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        fontSize: 14, fontWeight: FontWeight.bold),
+                  )
+                : SizedBox(),
+          ],
+        ),
       ),
     );
   }

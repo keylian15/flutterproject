@@ -16,48 +16,14 @@ class ListeItemPage extends ConsumerWidget {
     final widgets = <Widget>[];
     
     // Afficher un message si aucun résultat n'est trouvé après une recherche
-    if (state.blocks.isEmpty) {
-      return Scaffold(
-        body: Stack(
-          children: [
-            Positioned.fill(
-              child: Image.asset(
-                "assets/images/background.png",
-                fit: BoxFit.cover,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(10),
-              child: Column(
-                children: [
-                  SearchBarWidget(
-                    onSearchChanged: (query) {
-                      ref.read(appStoreProvider.notifier).filterBlocks(query);
-                    },
-                  ),
-                  const Expanded(
-                    child: Center(
-                      child: Text(
-                        "Aucun bloc trouvé",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        bottomNavigationBar: NavBar(currentIndex: 0),
+    if (state.blocks?.isEmpty ?? true) {
+      return const Center(
+        child: CircularProgressIndicator(),
       );
     }
     
     // Sinon, construire la liste des blocs
-    state.blocks.forEach((block) {
+    state.blocks?.forEach((block) {
       widgets.add(BlockWidget(
         nameSpacedId: block.nameSpacedId,
         showText: true,
