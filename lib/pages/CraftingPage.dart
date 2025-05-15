@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import '../widget/navBar_widget.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutterproject/Store/app_store.dart';
-import 'package:flutterproject/widget/blockWidget.dart';
 import '../models/recipe_model.dart';
+import '../widget/crafting_slot.dart';
+import '../widget/result_slot.dart';
 
 class Craftingpage extends ConsumerWidget {
   final String? selectedBlock;
@@ -11,31 +12,16 @@ class Craftingpage extends ConsumerWidget {
 
   Recipe? getRecipeForBlock(String blockName, List<Recipe> craftingData) {
     try {
-      print("Recherche recette pour '$blockName'");
-
-      final recipe = craftingData.firstWhere(
-        (recipe) {
-          return recipe.item.toLowerCase() == blockName.toLowerCase();
-        },
-        orElse: () {
-          print("Aucune recette trouvée pour: $blockName");
-          return Recipe(
-            item: '',
-            quantity: 0,
-            recipe: List.filled(9, null),
-            shapeless: false
-          );
-        },
+      return craftingData.firstWhere(
+        (recipe) => recipe.item.toLowerCase() == blockName.toLowerCase(),
+        orElse: () => Recipe(
+          item: '',
+          quantity: 0,
+          recipe: List.filled(9, null),
+          shapeless: false
+        ),
       );
-
-      if (recipe.item.isNotEmpty) {
-        print("Recette trouvée: ${recipe.item}");
-        print("Pattern: ${recipe.getPattern()}");
-      }
-
-      return recipe;
     } catch (e) {
-      print('Erreur recherche recette: $e');
       return Recipe(
         item: '',
         quantity: 0,
@@ -45,174 +31,62 @@ class Craftingpage extends ConsumerWidget {
     }
   }
 
-  Widget buildCraftingSlot(Recipe? recipe, int i, int j, WidgetRef ref) {
-    if (recipe == null || recipe.item.isEmpty) {
-      return Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFF8B8B8B),
-        ),
-      );
-    }
-
-    try {
-      final pattern = recipe.getPattern();
-      final ingredient = pattern[i][j];
-      
-      if (ingredient == null) {
-        return Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFF8B8B8B),
-          ),
-        );
-      }
-
-      // Utilisation de l'AppStore pour obtenir l'URL de l'image
-      return Consumer(
-        builder: (context, ref, child) {
-          return FutureBuilder<String>(
-            future: ref.read(appStoreProvider.notifier).getBlockImageUrl(ingredient),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              return Image.network(
-                snapshot.data ?? '',
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stack) {
-                  print('Erreur chargement image pour $ingredient: $error');
-                  return Center(
-                    child: Text(
-                      ingredient,
-                      style: const TextStyle(fontSize: 10),
-                      textAlign: TextAlign.center,
-                    ),
-                  );
-                },
-              );
-            },
-          );
-        },
-      );
-    } catch (e) {
-      print('Erreur construction slot ($i,$j): $e');
-      return Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFF8B8B8B),
-        ),
-      );
-    }
-  }
-
-  Widget buildResultSlot(String? selectedBlock, WidgetRef ref) {
-    if (selectedBlock == null) return Container();
-
-    return Consumer(
-      builder: (context, ref, child) {
-        final state = ref.watch(appStoreProvider);
-        Recipe? recipe;
-        int quantity = 1;
-
-        if (state.craftingData != null) {
-          recipe = getRecipeForBlock(selectedBlock, List<Recipe>.from(state.craftingData!));
-          if (recipe != null) {
-            quantity = recipe.quantity;
-          }
-        }
-
-        return Column(
-          children: [
-            // Slot de résultat avec l'image
-            Container(
-              width: 67,
-              height: 67,
-              decoration: BoxDecoration(
-                color: const Color(0xFF8B8B8B),
-              ),
-              child: FutureBuilder<String>(
-                future: ref.read(appStoreProvider.notifier).getBlockImageUrl(selectedBlock),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  return Stack(
-                    children: [
-                      Image.network(
-                        snapshot.data ?? '',
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stack) {
-                          return Center(
-                            child: Text(
-                              selectedBlock,
-                              style: const TextStyle(fontSize: 8),
-                              textAlign: TextAlign.center,
-                            ),
-                          );
-                        },
-                      ),
-                      if (quantity > 1)
-                        Positioned(
-                          right: 4,
-                          bottom: 4,
-                          child: Container(
-                            padding: const EdgeInsets.all(2),
-                            decoration: BoxDecoration(
-                              color: Colors.black54,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              quantity.toString(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  );
-                },
-              ),
-            ),
-            // Bouton bookmark
-            FutureBuilder<bool>(
-              future: ref.read(appStoreProvider.notifier).isFavorite(selectedBlock),
-              builder: (context, snapshot) {
-                final isFavorite = snapshot.data ?? false;
-                return IconButton(
-                  icon: Icon(
-                    isFavorite ? Icons.bookmark : Icons.bookmark_border,
-                    color: Colors.yellow,
-                  ),
-                  onPressed: () {
-                    if (isFavorite) {
-                      ref.read(appStoreProvider.notifier).removeFavorite(selectedBlock);
-                    } else {
-                      ref.read(appStoreProvider.notifier).addFavorite(selectedBlock);
-                    }
-                  },
-                );
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(appStoreProvider);
     Recipe? recipe;
 
     if (selectedBlock == null) {
-      return const Scaffold(
-        body: Center(
-          child: Text('Aucun bloc sélectionné'),
+      return Scaffold(
+        body: Container(
+          height: MediaQuery.of(context).size.height,
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage("assets/images/background.png"),
+              fit: BoxFit.cover,
+            ),
+          ),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Image.asset(
+                      "assets/images/craftingtable.png",
+                      height: 200,
+                      fit: BoxFit.contain,
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.7),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Text(
+                        "Aucun bloc sélectionné",
+                        style: TextStyle(
+                          fontSize: 28,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          shadows: [
+                            Shadow(
+                              offset: Offset(2, 2),
+                              blurRadius: 3,
+                              color: Colors.black,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ),
-        bottomNavigationBar: NavBar(currentIndex: 1),
+        bottomNavigationBar: const NavBar(currentIndex: 1),
       );
     }
 
@@ -317,7 +191,7 @@ class Craftingpage extends ConsumerWidget {
                                     decoration: BoxDecoration(
                                       color: const Color(0xFF8B8B8B),
                                     ),
-                                    child: buildCraftingSlot(recipe, i, j, ref),
+                                    child: CraftingSlot(recipe: recipe, i: i, j: j),
                                   ),
                               ],
                             ),
@@ -328,7 +202,7 @@ class Craftingpage extends ConsumerWidget {
                     Positioned(
                       top: 83,
                       right: 43, // Ajusté pour centrer avec le bouton
-                      child: buildResultSlot(selectedBlock, ref),
+                      child: ResultSlot(selectedBlock: selectedBlock),
                     ),
                   ],
                 ),
