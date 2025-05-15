@@ -87,6 +87,7 @@ class ListeItemPage extends ConsumerWidget {
               children: [
                 SearchBarWidget(
                   onSearchChanged: (query) {
+                    print("ListeItemPage a reçu la requête: $query"); // Débogage
                     ref.read(appStoreProvider.notifier).filterBlocks(query);
                   },
                 ),

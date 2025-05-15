@@ -19,6 +19,7 @@ class AppStore extends StateNotifier<AppState> {
         super(AppState()) {
     fetchBlocks();
     fetchCraftingData();
+    loadFavorites(); 
   }
 
   List<BlockData> _allBlocks = [];
@@ -36,23 +37,32 @@ class AppStore extends StateNotifier<AppState> {
       List<dynamic> items = json.decode(itemsResponse.data);
 
       final res = <BlockData>[];
+      final Set<String> addedIds = {}; // Pour suivre les IDs déjà ajoutés
       
       // Ajout des blocs
       blocks.forEach((block) {
-        res.add(BlockData(
-          name: block["name"],
-          nameSpacedId: block["namespacedId"],
-          image: block["image"],
-        ));
+        String namespacedId = block["namespacedId"];
+        if (!addedIds.contains(namespacedId)) {
+          res.add(BlockData(
+            name: block["name"],
+            nameSpacedId: namespacedId,
+            image: block["image"],
+          ));
+          addedIds.add(namespacedId);
+        }
       });
 
       // Ajout des items
       items.forEach((item) {
-        res.add(BlockData(
-          name: item["name"],
-          nameSpacedId: item["namespacedId"],
-          image: item["image"],
-        ));
+        String namespacedId = item["namespacedId"];
+        if (!addedIds.contains(namespacedId)) {
+          res.add(BlockData(
+            name: item["name"],
+            nameSpacedId: namespacedId,
+            image: item["image"],
+          ));
+          addedIds.add(namespacedId);
+        }
       });
 
       _allBlocks = List.from(res);
@@ -88,6 +98,7 @@ class AppStore extends StateNotifier<AppState> {
   void filterBlocks(String query) {
     try {
       print("Filtrage avec la requête: '$query'");
+      _currentSearchQuery = query;
       
       if (_originalBlocks == null) {
         print("Pas de blocs originaux stockés");
@@ -96,11 +107,28 @@ class AppStore extends StateNotifier<AppState> {
 
       if (query.isEmpty) {
         state = state.copyWith(blocks: _originalBlocks);
+        print("Affichage de tous les blocs: ${_originalBlocks!.length}");
         return;
       }
 
+      // Utiliser un Set pour éviter les doublons
+      final Set<String> addedIds = {};
       final filteredBlocks = _originalBlocks!.where((block) {
-        return block.nameSpacedId.toLowerCase().contains(query.toLowerCase());
+        // Vérifier si ce bloc a déjà été ajouté
+        if (addedIds.contains(block.nameSpacedId)) {
+          return false;
+        }
+        
+        // Vérifier si le bloc correspond à la recherche
+        bool matches = block.nameSpacedId.toLowerCase().contains(query.toLowerCase()) ||
+                      (block.name?.toLowerCase() ?? "").contains(query.toLowerCase());
+        
+        // Si le bloc correspond, l'ajouter à la liste des IDs déjà traités
+        if (matches) {
+          addedIds.add(block.nameSpacedId);
+        }
+        
+        return matches;
       }).toList();
 
       print("Nombre de blocs filtrés: ${filteredBlocks.length}");
@@ -141,7 +169,6 @@ class AppStore extends StateNotifier<AppState> {
             favoris.remove(formattedId);
             await prefs.setStringList("favoris", favoris);
             state = state.copyWith(nameIdsFavorits: favoris);
-            print('Favori supprimé: $formattedId'); // Debug
         }
     } catch (e) {
         print('Erreur lors de la suppression du favori: $e');
@@ -161,9 +188,13 @@ class AppStore extends StateNotifier<AppState> {
   }
 
   Future<void> loadFavorites() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    List<String> favoris = prefs.getStringList("favoris") ?? [];
-    state = state.copyWith(nameIdsFavorits: favoris);
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      List<String> favoris = prefs.getStringList("favoris") ?? [];
+      state = state.copyWith(nameIdsFavorits: favoris);
+    } catch (e) {
+      print('Erreur lors du chargement des favoris: $e');
+    }
   }
 
   BlockData getBloc(String nameSpacedId) {
@@ -204,24 +235,24 @@ class AppStore extends StateNotifier<AppState> {
 }
 
 class AppState {
-  final List<Recipe>? craftingData;
   final List<BlockData>? blocks;
+  final List<Recipe>? craftingData;
   final List<String>? nameIdsFavorits;
 
   AppState({
-    this.craftingData,
     this.blocks,
+    this.craftingData,
     this.nameIdsFavorits,
   });
 
   AppState copyWith({
-    List<Recipe>? craftingData,
     List<BlockData>? blocks,
+    List<Recipe>? craftingData,
     List<String>? nameIdsFavorits,
   }) {
     return AppState(
-      craftingData: craftingData ?? this.craftingData,
       blocks: blocks ?? this.blocks,
+      craftingData: craftingData ?? this.craftingData,
       nameIdsFavorits: nameIdsFavorits ?? this.nameIdsFavorits,
     );
   }

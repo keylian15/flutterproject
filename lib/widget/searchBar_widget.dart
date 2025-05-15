@@ -34,7 +34,7 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
           fillColor: Colors.white,
         ),
         onChanged: (query) {
-          print("Search query: $query"); // Débogage
+          print("Requête de recherche: $query"); // Débogage
           if (widget.onSearchChanged != null) {
             widget.onSearchChanged!(query);
           }
