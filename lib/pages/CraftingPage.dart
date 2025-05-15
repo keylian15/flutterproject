@@ -11,85 +11,128 @@ class Craftingpage extends ConsumerWidget {
 
   Recipe? getRecipeForBlock(String blockName, List<Recipe> craftingData) {
     try {
-      // Convertir le nom du bloc au format attendu (ex: "Crafting Table" -> "crafting_table")
-      final searchName = blockName.toLowerCase().replaceAll(' ', '_');
-      print("Recherche recette pour '$blockName' (converti en '$searchName')");
-      
-      return craftingData.firstWhere(
-        (recipe) => recipe.result == searchName,
+      print("Recherche recette pour '$blockName'");
+
+      final recipe = craftingData.firstWhere(
+        (recipe) {
+          return recipe.item.toLowerCase() == blockName.toLowerCase();
+        },
         orElse: () {
-          print("Aucune recette trouvée pour: $searchName");
-          return Recipe(result: '', pattern: [], ingredients: {});
+          print("Aucune recette trouvée pour: $blockName");
+          return Recipe(
+            item: '',
+            quantity: 0,
+            recipe: List.filled(9, null),
+            shapeless: false
+          );
         },
       );
+
+      if (recipe.item.isNotEmpty) {
+        print("Recette trouvée: ${recipe.item}");
+        print("Pattern: ${recipe.getPattern()}");
+      }
+
+      return recipe;
     } catch (e) {
       print('Erreur recherche recette: $e');
-      return Recipe(result: '', pattern: [], ingredients: {});
+      return Recipe(
+        item: '',
+        quantity: 0,
+        recipe: List.filled(9, null),
+        shapeless: false
+      );
     }
   }
 
-  Widget buildCraftingSlot(Recipe? recipe, int i, int j) {
-    if (recipe == null || i >= recipe.pattern.length) {
-      print("Slot vide ($i,$j): recette nulle ou index invalide");
-      return Container();
+  Widget buildCraftingSlot(Recipe? recipe, int i, int j, WidgetRef ref) {
+    if (recipe == null || recipe.item.isEmpty) {
+      return Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFF8B8B8B),
+        ),
+      );
     }
 
     try {
-      final row = recipe.pattern[i];
-      print("Pattern ligne $i: $row");
-      
-      if (j >= row.length) {
-        print("Index colonne invalide: $j >= ${row.length}");
-        return Container();
-      }
-
-      final key = row[j];
-      print("Clé à la position ($i,$j): $key");
-      
-      if (key == ' ') {
-        print("Case vide à ($i,$j)");
-        return Container();
-      }
-
-      final ingredient = recipe.ingredients[key];
-      print("Ingrédient trouvé pour $key: $ingredient");
+      final pattern = recipe.getPattern();
+      final ingredient = pattern[i][j];
       
       if (ingredient == null) {
-        print("Pas d'ingrédient pour la clé: $key");
-        return Container();
+        return Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF8B8B8B),
+          ),
+        );
       }
 
-      final imageUrl = 'https://raw.githubusercontent.com/anish-shanbhag/minecraft-api/master/public/images/blocks/$ingredient.png';
-      print("Chargement image: $imageUrl");
+      // Utilisation de l'AppStore pour obtenir l'URL de l'image
+      return Consumer(
+        builder: (context, ref, child) {
+          return FutureBuilder<String>(
+            future: ref.read(appStoreProvider.notifier).getBlockImageUrl(ingredient),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-      return Image.network(
-        imageUrl,
-        fit: BoxFit.cover,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Container(
-            color: Colors.grey[300],
-            child: Center(child: CircularProgressIndicator()),
-          );
-        },
-        errorBuilder: (context, error, stack) {
-          print('Erreur chargement image $ingredient: $error');
-          return Container(
-            color: Colors.grey,
-            child: Center(
-              child: Text(
-                ingredient,
-                style: TextStyle(fontSize: 8),
-                textAlign: TextAlign.center,
-              ),
-            ),
+              return Image.network(
+                snapshot.data ?? '',
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stack) {
+                  print('Erreur chargement image pour $ingredient: $error');
+                  return Center(
+                    child: Text(
+                      ingredient,
+                      style: const TextStyle(fontSize: 10),
+                      textAlign: TextAlign.center,
+                    ),
+                  );
+                },
+              );
+            },
           );
         },
       );
     } catch (e) {
-      print('Erreur slot ($i,$j): $e');
-      return Container(color: Colors.red.withOpacity(0.3));
+      print('Erreur construction slot ($i,$j): $e');
+      return Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFF8B8B8B),
+        ),
+      );
     }
+  }
+
+  Widget buildResultSlot(String? selectedBlock, WidgetRef ref) {
+    if (selectedBlock == null) return Container();
+
+    return Consumer(
+      builder: (context, ref, child) {
+        return FutureBuilder<String>(
+          future: ref.read(appStoreProvider.notifier).getBlockImageUrl(selectedBlock),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            return Image.network(
+              snapshot.data ?? '',
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stack) {
+                return Center(
+                  child: Text(
+                    selectedBlock,
+                    style: const TextStyle(fontSize: 8),
+                    textAlign: TextAlign.center,
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -145,7 +188,7 @@ class Craftingpage extends ConsumerWidget {
                                     decoration: BoxDecoration(
                                       color: const Color(0xFF8B8B8B),
                                     ),
-                                    child: buildCraftingSlot(recipe, i, j),
+                                    child: buildCraftingSlot(recipe, i, j, ref),
                                   ),
                               ],
                             ),
@@ -162,25 +205,7 @@ class Craftingpage extends ConsumerWidget {
                         decoration: BoxDecoration(
                           color: const Color(0xFF8B8B8B),
                         ),
-                        child: selectedBlock != null
-                          ? Image.network(
-                              "https://raw.githubusercontent.com/anish-shanbhag/minecraft-api/master/public/images/blocks/${selectedBlock!.toLowerCase().replaceAll(' ', '_')}.png",
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                print('Erreur chargement image: $error');
-                                return Container(
-                                  color: Colors.grey,
-                                  child: Center(
-                                    child: Text(
-                                      selectedBlock!,
-                                      style: TextStyle(fontSize: 8),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ),
-                                );
-                              },
-                            )
-                          : null,
+                        child: buildResultSlot(selectedBlock, ref),
                       ),
                     ),
                   ],

@@ -15,10 +15,52 @@ class ListeItemPage extends ConsumerWidget {
     // Création de la liste de widget.
     final widgets = <Widget>[];
     
+    // Afficher un loader pendant le chargement initial
+    if (state.blocks == null) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+    
     // Afficher un message si aucun résultat n'est trouvé après une recherche
-    if (state.blocks?.isEmpty ?? true) {
-      return const Center(
-        child: CircularProgressIndicator(),
+    if (state.blocks!.isEmpty) {
+      return Scaffold(
+        body: Stack(
+          children: [
+            Positioned.fill(
+              child: Image.asset(
+                "assets/images/background.png",
+                fit: BoxFit.cover,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                children: [
+                  SearchBarWidget(
+                    onSearchChanged: (query) {
+                      ref.read(appStoreProvider.notifier).filterBlocks(query);
+                    },
+                  ),
+                  const Expanded(
+                    child: Center(
+                      child: Text(
+                        "Aucun bloc trouvé",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        bottomNavigationBar: NavBar(currentIndex: 0),
       );
     }
     

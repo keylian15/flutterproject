@@ -23,6 +23,7 @@ class AppStore extends StateNotifier<AppState> {
 
   List<BlockData> _allBlocks = [];
   String _currentSearchQuery = '';
+  List<BlockData>? _originalBlocks;
 
   Future<void> fetchBlocks() async {
     try {
@@ -39,6 +40,7 @@ class AppStore extends StateNotifier<AppState> {
       });
 
       _allBlocks = List.from(res);
+      _originalBlocks = List.from(res); // Stockez la liste originale
 
       if (_currentSearchQuery.isNotEmpty) {
         filterBlocks(_currentSearchQuery);
@@ -52,25 +54,43 @@ class AppStore extends StateNotifier<AppState> {
 
   Future<void> fetchCraftingData() async {
     try {
+      print("Début chargement des recettes...");
       final recipes = await _apiHelper.getCrafting();
-      state = state.copyWith(craftingData: recipes);
-      print('Recettes chargées: ${recipes.length}');
+      print("Recettes récupérées: ${recipes.length}");
+      
+      if (recipes.isNotEmpty) {
+        state = state.copyWith(craftingData: recipes);
+        print('Recettes chargées avec succès');
+      } else {
+        print('Aucune recette chargée');
+      }
     } catch (e) {
       print('Erreur lors du chargement des recettes: $e');
     }
   }
 
   void filterBlocks(String query) {
-    _currentSearchQuery = query;
+    try {
+      print("Filtrage avec la requête: '$query'");
+      
+      if (_originalBlocks == null) {
+        print("Pas de blocs originaux stockés");
+        return;
+      }
 
-    if (query.isEmpty) {
-      state = state.copyWith(blocks: List.from(_allBlocks));
-    } else {
-      final filteredBlocks = _allBlocks.where((block) =>
-          (block.name?.toLowerCase().contains(query.toLowerCase()) ?? false) ||
-          (block.nameSpacedId?.toLowerCase().contains(query.toLowerCase()) ?? false)).toList();
+      if (query.isEmpty) {
+        state = state.copyWith(blocks: _originalBlocks);
+        return;
+      }
 
+      final filteredBlocks = _originalBlocks!.where((block) {
+        return block.nameSpacedId.toLowerCase().contains(query.toLowerCase());
+      }).toList();
+
+      print("Nombre de blocs filtrés: ${filteredBlocks.length}");
       state = state.copyWith(blocks: filteredBlocks);
+    } catch (e) {
+      print("Erreur lors du filtrage des blocs: $e");
     }
   }
 
@@ -113,6 +133,26 @@ class AppStore extends StateNotifier<AppState> {
       (bloc) => bloc.nameSpacedId == nameSpacedId,
       orElse: () => BlockData(name: "Inconnu", nameSpacedId: nameSpacedId, image: ""),
     ) ?? BlockData(name: "Inconnu", nameSpacedId: nameSpacedId, image: "");
+  }
+
+  Future<String> getBlockImageUrl(String blockName) async {
+    try {
+      final formattedName = blockName.toLowerCase().replaceAll(' ', '_');
+      final baseUrl = 'https://raw.githubusercontent.com/anish-shanbhag/minecraft-api/master/public/images';
+      
+      final blockUrl = '$baseUrl/blocks/$formattedName.png';
+      final itemUrl = '$baseUrl/items/$formattedName.png';
+      
+      try {
+        final blockResponse = await _apiHelper.checkImageExists(blockUrl);
+        if (blockResponse) return blockUrl;
+      } catch (_) {}
+      
+      return itemUrl;
+    } catch (e) {
+      print('Erreur récupération URL image: $e');
+      return '';
+    }
   }
 }
 

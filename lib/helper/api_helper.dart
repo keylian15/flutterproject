@@ -22,37 +22,57 @@ class ApiHelper {
 
   Future<List<Recipe>> getCrafting() async {
     try {
-      const testRecipes = [
-        {
-          "result": "Crafting_Table", // Correspond au nom exact du bloc
-          "pattern": [
-            "WW",
-            "WW"
-          ],
-          "ingredients": {
-            "W": "Oak_Planks" // Correspond au nom exact du bloc
-          }
-        },
-        {
-          "result": "Chest",
-          "pattern": [
-            "WWW",
-            "W W",
-            "WWW"
-          ],
-          "ingredients": {
-            "W": "Oak_Planks"
-          }
-        }
-      ];
+      final url = 'https://raw.githubusercontent.com/anish-shanbhag/minecraft-api/master/data/recipes.json';
+      final response = await dio.get(url);
       
-      final recipes = testRecipes.map((item) => Recipe.fromJson(item)).toList();
-      print("Recettes disponibles:");
-      recipes.forEach((recipe) => print(" - ${recipe.result}"));
-      return recipes;
+      if (response.statusCode == 200) {
+        // Assurons-nous que nous avons une liste de recettes
+        String responseData = response.data.toString();
+        List<dynamic> jsonData = json.decode(responseData);
+        
+        print("Données brutes reçues: ${jsonData.length} recettes");
+        
+        final recipes = jsonData.map((item) {
+          try {
+            return Recipe.fromJson(item);
+          } catch (e) {
+            print("Erreur parsing recette: $e");
+            return null;
+          }
+        }).where((recipe) => recipe != null).cast<Recipe>().toList();
+        
+        print("Recettes parsées avec succès: ${recipes.length}");
+        return recipes;
+      }
+      
+      throw Exception('Erreur HTTP: ${response.statusCode}');
     } catch (e) {
-      print('Erreur API crafting: $e');
+      print('Erreur détaillée API crafting: $e');
       return [];
     }
+  }
+
+  Future<bool> checkImageExists(String path) async {
+    try {
+      final response = await dio.head(path);
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Erreur vérification image: $e');
+      return false;
+    }
+  }
+
+  // Ajout d'une méthode pour vérifier l'existence d'une image dans les deux dossiers
+  Future<String> getImageUrl(String itemName) async {
+    final formattedName = itemName.toLowerCase().replaceAll(' ', '_');
+    final baseUrl = 'https://raw.githubusercontent.com/anish-shanbhag/minecraft-api/master/public/images';
+    
+    // Vérifier d'abord dans blocks
+    if (await checkImageExists('$baseUrl/blocks/$formattedName.png')) {
+      return '$baseUrl/blocks/$formattedName.png';
+    }
+    
+    // Sinon retourner le chemin items
+    return '$baseUrl/items/$formattedName.png';
   }
 }
