@@ -101,7 +101,7 @@ class AppStore extends StateNotifier<AppState> {
     if (!favoris.contains(nameSpacedId)) {
       favoris.add(nameSpacedId);
       await prefs.setStringList("favoris", favoris);
-      state = state.copyWith(nameIdsFavorits: favoris);
+      state = state.copyWith(nameIdsFavorits: favoris);  // Met à jour l'état
     }
   }
 
@@ -112,7 +112,7 @@ class AppStore extends StateNotifier<AppState> {
     if (favoris.contains(nameSpacedId)) {
       favoris.remove(nameSpacedId);
       await prefs.setStringList("favoris", favoris);
-      state = state.copyWith(nameIdsFavorits: favoris);
+      state = state.copyWith(nameIdsFavorits: favoris);  // Met à jour l'état
     }
   }
 

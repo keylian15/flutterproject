@@ -109,27 +109,94 @@ class Craftingpage extends ConsumerWidget {
 
     return Consumer(
       builder: (context, ref, child) {
-        return FutureBuilder<String>(
-          future: ref.read(appStoreProvider.notifier).getBlockImageUrl(selectedBlock),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
+        final state = ref.watch(appStoreProvider);
+        Recipe? recipe;
+        int quantity = 1;
 
-            return Image.network(
-              snapshot.data ?? '',
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stack) {
-                return Center(
-                  child: Text(
-                    selectedBlock,
-                    style: const TextStyle(fontSize: 8),
-                    textAlign: TextAlign.center,
+        if (state.craftingData != null) {
+          recipe = getRecipeForBlock(selectedBlock, List<Recipe>.from(state.craftingData!));
+          if (recipe != null) {
+            quantity = recipe.quantity;
+          }
+        }
+
+        return Column(
+          children: [
+            // Slot de résultat avec l'image
+            Container(
+              width: 67,
+              height: 67,
+              decoration: BoxDecoration(
+                color: const Color(0xFF8B8B8B),
+              ),
+              child: FutureBuilder<String>(
+                future: ref.read(appStoreProvider.notifier).getBlockImageUrl(selectedBlock),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  return Stack(
+                    children: [
+                      Image.network(
+                        snapshot.data ?? '',
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stack) {
+                          return Center(
+                            child: Text(
+                              selectedBlock,
+                              style: const TextStyle(fontSize: 8),
+                              textAlign: TextAlign.center,
+                            ),
+                          );
+                        },
+                      ),
+                      if (quantity > 1)
+                        Positioned(
+                          right: 4,
+                          bottom: 4,
+                          child: Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              color: Colors.black54,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              quantity.toString(),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              ),
+            ),
+            // Bouton bookmark
+            FutureBuilder<bool>(
+              future: ref.read(appStoreProvider.notifier).isFavorite(selectedBlock),
+              builder: (context, snapshot) {
+                final isFavorite = snapshot.data ?? false;
+                return IconButton(
+                  icon: Icon(
+                    isFavorite ? Icons.bookmark : Icons.bookmark_border,
+                    color: Colors.yellow,
                   ),
+                  onPressed: () {
+                    if (isFavorite) {
+                      ref.read(appStoreProvider.notifier).removeFavorite(selectedBlock);
+                    } else {
+                      ref.read(appStoreProvider.notifier).addFavorite(selectedBlock);
+                    }
+                  },
                 );
               },
-            );
-          },
+            ),
+          ],
         );
       },
     );
@@ -198,15 +265,8 @@ class Craftingpage extends ConsumerWidget {
                     // Slot de résultat
                     Positioned(
                       top: 83,
-                      right: 44,
-                      child: Container(
-                        width: 67,
-                        height: 67,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF8B8B8B),
-                        ),
-                        child: buildResultSlot(selectedBlock, ref),
-                      ),
+                      right: 43, // Ajusté pour centrer avec le bouton
+                      child: buildResultSlot(selectedBlock, ref),
                     ),
                   ],
                 ),
