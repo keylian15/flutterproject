@@ -27,10 +27,17 @@ class AppStore extends StateNotifier<AppState> {
 
   Future<void> fetchBlocks() async {
     try {
-      final response = await _apiHelper.get();
-      List<dynamic> blocks = json.decode(response.data);
+      // Récupération des blocs
+      final blocksResponse = await _apiHelper.get();
+      List<dynamic> blocks = json.decode(blocksResponse.data);
+
+      // Récupération des items
+      final itemsResponse = await _apiHelper.getItems();
+      List<dynamic> items = json.decode(itemsResponse.data);
 
       final res = <BlockData>[];
+      
+      // Ajout des blocs
       blocks.forEach((block) {
         res.add(BlockData(
           name: block["name"],
@@ -39,8 +46,17 @@ class AppStore extends StateNotifier<AppState> {
         ));
       });
 
+      // Ajout des items
+      items.forEach((item) {
+        res.add(BlockData(
+          name: item["name"],
+          nameSpacedId: item["namespacedId"],
+          image: item["image"],
+        ));
+      });
+
       _allBlocks = List.from(res);
-      _originalBlocks = List.from(res); // Stockez la liste originale
+      _originalBlocks = List.from(res);
 
       if (_currentSearchQuery.isNotEmpty) {
         filterBlocks(_currentSearchQuery);
@@ -48,7 +64,7 @@ class AppStore extends StateNotifier<AppState> {
         state = state.copyWith(blocks: res);
       }
     } catch (e) {
-      print("Erreur lors du chargement des blocs: $e");
+      print("Erreur lors du chargement des blocs et items: $e");
     }
   }
 

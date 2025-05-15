@@ -20,6 +20,11 @@ class ApiHelper {
     return dio.get(url);
   }
 
+  Future<Response> getItems() {
+    final url = 'https://raw.githubusercontent.com/anish-shanbhag/minecraft-api/refs/heads/master/data/items.json';
+    return dio.get(url);
+  }
+
   Future<List<Recipe>> getCrafting() async {
     try {
       final url = 'https://raw.githubusercontent.com/anish-shanbhag/minecraft-api/master/data/recipes.json';
