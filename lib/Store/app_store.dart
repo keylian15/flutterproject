@@ -176,28 +176,37 @@ class AppStore extends StateNotifier<AppState> {
       return '';
     }
   }
+
+  bool isBlockCraftable(String blockName) {
+    final recipes = state.craftingData;
+    if (recipes == null) return false;
+    
+    return recipes.any((recipe) => 
+      recipe.item.toLowerCase() == blockName.toLowerCase()
+    );
+  }
 }
 
 class AppState {
+  final List<Recipe>? craftingData;
   final List<BlockData>? blocks;
   final List<String>? nameIdsFavorits;
-  final List<Recipe>? craftingData;
 
   AppState({
+    this.craftingData,
     this.blocks,
     this.nameIdsFavorits,
-    this.craftingData,
   });
 
   AppState copyWith({
+    List<Recipe>? craftingData,
     List<BlockData>? blocks,
     List<String>? nameIdsFavorits,
-    List<Recipe>? craftingData,
   }) {
     return AppState(
+      craftingData: craftingData ?? this.craftingData,
       blocks: blocks ?? this.blocks,
       nameIdsFavorits: nameIdsFavorits ?? this.nameIdsFavorits,
-      craftingData: craftingData ?? this.craftingData,
     );
   }
 }

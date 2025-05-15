@@ -207,13 +207,75 @@ class Craftingpage extends ConsumerWidget {
     final state = ref.watch(appStoreProvider);
     Recipe? recipe;
 
-    if (selectedBlock != null && state.craftingData != null) {
-      recipe = getRecipeForBlock(selectedBlock!, List<Recipe>.from(state.craftingData!));
+    if (selectedBlock == null) {
+      return const Scaffold(
+        body: Center(
+          child: Text('Aucun bloc sélectionné'),
+        ),
+        bottomNavigationBar: NavBar(currentIndex: 1),
+      );
+    }
+
+    // Vérifier si le bloc est craftable
+    bool isCraftable = state.craftingData != null && 
+      ref.read(appStoreProvider.notifier).isBlockCraftable(selectedBlock!);
+
+    if (!isCraftable) {
+      return Scaffold(
+        body: Container(
+          height: MediaQuery.of(context).size.height,
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage("assets/images/background.png"),
+              fit: BoxFit.cover,
+            ),
+          ),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.7),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    "Ce bloc n'est pas craftable",
+                    style: TextStyle(
+                      fontSize: 28,
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                      shadows: [
+                        Shadow(
+                          offset: Offset(2, 2),
+                          blurRadius: 3,
+                          color: Colors.black,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Retour'),
+                ),
+              ],
+            ),
+          ),
+        ),
+        bottomNavigationBar: NavBar(currentIndex: 1),
+      );
     }
 
     if (state.craftingData == null) {
       // Déclencher le chargement des données si nécessaire
       ref.read(appStoreProvider.notifier).fetchCraftingData();
+    }
+
+    if (selectedBlock != null && state.craftingData != null) {
+      recipe = getRecipeForBlock(selectedBlock!, List<Recipe>.from(state.craftingData!));
     }
 
     return Scaffold(
