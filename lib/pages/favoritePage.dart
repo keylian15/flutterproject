@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import '../widget/navBar_widget.dart';
-import 'package:flutter/material.dart';
 import 'package:flutterproject/Store/app_store.dart';
 import 'package:flutterproject/widget/blockWidget.dart';
-import '../widget/navBar_widget.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutterproject/pages/CraftingPage.dart'; // Ajout de l'import
 
 class FavoritePage extends ConsumerWidget {
   const FavoritePage({super.key});
@@ -16,10 +15,22 @@ class FavoritePage extends ConsumerWidget {
     final widgets = <Widget>[];
     final List<String> nonNullFavorits = state.nameIdsFavorits ?? [];
     for (var nameSpacedId in nonNullFavorits) {
-      widgets.add(BlockWidget(
-        nameSpacedId: nameSpacedId,
-        showText: true,
-      ));
+      widgets.add(
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => Craftingpage(selectedBlock: nameSpacedId),
+              ),
+            );
+          },
+          child: BlockWidget(
+            nameSpacedId: nameSpacedId,
+            showText: true,
+          ),
+        ),
+      );
     }
 
     return Scaffold(

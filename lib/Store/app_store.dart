@@ -95,31 +95,53 @@ class AppStore extends StateNotifier<AppState> {
   }
 
   Future<void> addFavorite(String nameSpacedId) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    List<String> favoris = prefs.getStringList("favoris") ?? [];
-
-    if (!favoris.contains(nameSpacedId)) {
-      favoris.add(nameSpacedId);
-      await prefs.setStringList("favoris", favoris);
-      state = state.copyWith(nameIdsFavorits: favoris);  // Met à jour l'état
+    try {
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        List<String> favoris = prefs.getStringList("favoris") ?? [];
+        
+        // Formater le nameSpacedId comme dans l'API
+        final formattedId = nameSpacedId.toLowerCase().replaceAll(' ', '_');
+        
+        if (!favoris.contains(formattedId)) {
+            favoris.add(formattedId);
+            await prefs.setStringList("favoris", favoris);
+            state = state.copyWith(nameIdsFavorits: favoris);
+            print('Favori ajouté: $formattedId'); // Debug
+        }
+    } catch (e) {
+        print('Erreur lors de l\'ajout du favori: $e');
     }
   }
 
   Future<void> removeFavorite(String nameSpacedId) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    List<String> favoris = prefs.getStringList("favoris") ?? [];
-
-    if (favoris.contains(nameSpacedId)) {
-      favoris.remove(nameSpacedId);
-      await prefs.setStringList("favoris", favoris);
-      state = state.copyWith(nameIdsFavorits: favoris);  // Met à jour l'état
+    try {
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        List<String> favoris = prefs.getStringList("favoris") ?? [];
+        
+        // Formater le nameSpacedId comme dans l'API
+        final formattedId = nameSpacedId.toLowerCase().replaceAll(' ', '_');
+        
+        if (favoris.contains(formattedId)) {
+            favoris.remove(formattedId);
+            await prefs.setStringList("favoris", favoris);
+            state = state.copyWith(nameIdsFavorits: favoris);
+            print('Favori supprimé: $formattedId'); // Debug
+        }
+    } catch (e) {
+        print('Erreur lors de la suppression du favori: $e');
     }
   }
 
   Future<bool> isFavorite(String nameSpacedId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final favoris = prefs.getStringList('favoris') ?? [];
-    return favoris.contains(nameSpacedId);
+    try {
+        final prefs = await SharedPreferences.getInstance();
+        final favoris = prefs.getStringList('favoris') ?? [];
+        final formattedId = nameSpacedId.toLowerCase().replaceAll(' ', '_');
+        return favoris.contains(formattedId);
+    } catch (e) {
+        print('Erreur lors de la vérification du favori: $e');
+        return false;
+    }
   }
 
   Future<void> loadFavorites() async {
