@@ -30,35 +30,35 @@
 - [ Acknowledgments](#-acknowledgments)
 
 ---
-
 ## Overview
 
-Cette application Flutter s'inspire de l'univers de Minecraft et permet aux utilisateurs de consulter les différents items du jeu ainsi que leur méthode de fabrication (craft). Elle propose une interface simple, intuitive et fluide, conçue pour faciliter la recherche et la consultation des recettes de craft.  
-L'application comprend trois pages principales : la liste des items, la page de détails du craft, et une page dédiée aux favoris.
+This Flutter application is inspired by the Minecraft universe and allows users to browse all the items from the game along with their crafting methods. It features a simple, intuitive, and smooth interface designed to make searching for and viewing crafting recipes easy.  
+The app includes three main pages: the item list, the craft detail page, and a favorites page.
 
 ---
 
 ## Features
 
-- **Liste des items**  
-  Une page dédiée affichant tous les items du jeu Minecraft. Elle inclut :
+- **Item List**  
+  A dedicated page displaying all Minecraft items. It includes:
 
-  - Une **barre de recherche** pour filtrer les items par nom.
-  - Un **clic sur un item** redirige vers sa page de craft.
+  - A **search bar** to filter items by name.
+  - **Clicking on an item** redirects to its craft page.
 
-- **Page de craft**  
-  Cette page affiche :
+- **Craft Page**  
+  This page displays:
 
-  - Le **craft complet** de l’item sélectionné (grille de crafting ou autre présentation visuelle).
-  - Un **bouton pour ajouter ou retirer l’item des favoris**.
+  - The **complete crafting recipe** of the selected item (crafting grid or other visual representation).
+  - A **button to add or remove the item from favorites**.
 
-- **Page de favoris**  
-  Cette page affiche :
-  - Liste tous les **items ajoutés en favoris**.
-  - Même fonctionnement que la liste d’items classique (recherche + redirection vers la page de craft).
-  - Sur la page de craft ouverte depuis les favoris, le bouton d’ajout est remplacé par un bouton de suppression des favoris.
+- **Favorites Page**  
+  This page displays:
+  - A list of all **items added to favorites**.
+  - Same functionality as the item list (search + redirection to the craft page).
+  - On the craft page accessed from favorites, the add button is replaced by a **remove from favorites** button.
 
 ---
+
 
 ## Project Structure
 
